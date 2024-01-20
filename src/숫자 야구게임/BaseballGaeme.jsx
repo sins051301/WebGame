@@ -1,4 +1,4 @@
-import React, {useState, useRef, useCallback} from "react";
+import React, {useState, useRef, useCallback, memo} from "react";
 import styled from "styled-components";
 import Chance from "./Chance";
 const Wrapper = styled.div`
@@ -52,14 +52,14 @@ const generateRandomString = (num) => {
     return result;
   }
 
+const intitFirstValue =  generateRandomString(4);
 
 function BaseballGame(props){
- 
-    const [chance, setChance, chanceDecrease, chanceClear] = Chance(0);
-    const intitFirstValue =  generateRandomString(4);
-    const [baseball, setBaseball] = useState(intitFirstValue);
+    const [chance, setChance, chanceDecrease, chanceClear] = Chance(); 
+    const [baseball, setBaseball] = useState(intitFirstValue); //함수만 넣으면 lazy init 한번만 실행
+
     // const [hint, setHint] = useState("");
-    const [value, setValue] = useState([]);
+    const [value, setValue] = useState('');
     const valueRef = useRef(null);
     const [answer, setAnswer] = useState('');
     const [back, setBack] = useState('white');
@@ -67,12 +67,12 @@ function BaseballGame(props){
     // const [chance, setChance] = useState(10);
     const [list, setList] = useState([]);
 
-    const AnswerConfirm = (answer, sub) =>{
+    const AnswerConfirm = (answer, sub) =>{ // useCallback이 별 의미가 없음
         let str = 0;
         let ball = 0;
         for (let i = 0; i< answer.length; i++){
             for(let j=0; j<answer.length; j++){
-                if(sub[i] === answer[j] && i===j){
+                if(sub[i] === answer[j] && i===j){  
                     str++;
                 }
                 else if(sub[i] === answer[j] && i!==j){
@@ -92,7 +92,7 @@ function BaseballGame(props){
             return false;
         }
         
-    }
+    } 
     // const chanceDecrease = () =>{
     //    setChance((chance) =>chance-=1)
     // }
@@ -106,15 +106,21 @@ function BaseballGame(props){
     
     //무엇을 하든 return 한게 화면
   
-    const typeChange = (e) =>{
+    const typeChange = useCallback((e) =>{
         e.preventDefault();
-        //setValue(e.target.value);
-        setValue(valueRef.current.value); 
-        
-    }
+        setValue(e.target.value);
+        //setValue(valueRef.current.value);
+    }, []);
+   
     const AnswerChange = useCallback((e)=>{
         e.preventDefault();
-        let Valuearr = value.split('').map((v) => parseInt(v));
+        if(value === ""){
+            setAnswer('입력하세요!');
+            setBack('#FF7493');
+            valueRef.current.focus();
+            return;
+        }
+        const Valuearr = value.split('').map((v) => parseInt(v));
         let set = new Set(Valuearr);
         
         if(Valuearr.length !==set.size || Valuearr.length !==baseball.length){
@@ -125,12 +131,7 @@ function BaseballGame(props){
             
         }
         
-        if(value === ""){
-            setAnswer('입력하세요!');
-            setBack('#FF7493');
-           
-            valueRef.current.focus();
-        }
+      
         else if(AnswerConfirm(baseball, Valuearr) && chance >0){
             setBack('#FFC300');
             setAnswer(`홈런! ${value}`);
@@ -146,6 +147,7 @@ function BaseballGame(props){
             setValue("");
             chanceDecrease(chance);
             valueRef.current.focus();
+            
         }
         else if(chance <=0){
             setAnswer(`실패! 다시 시작하세요 ${baseball}`);
@@ -156,8 +158,8 @@ function BaseballGame(props){
         }
         
 
-    },[value, answer]);
-    const problemChange = (e) =>{
+    },[value]); //여기서 value 빼면 실행이 안됨 
+    const problemChange = useCallback((e) =>{
         e.preventDefault();
         setBaseball(generateRandomString(4));
         // setHint("");
@@ -167,17 +169,17 @@ function BaseballGame(props){
         listClear();
         setBack("white");
 
-    }
+    },[])
 
     return ( 
     <React.Fragment>
         <Wrapper>
         <WrapperContent color ={back}>
-        <form> 
+        <form onSubmit={AnswerChange}> 
         <label>숫자 야구</label>
             <p/>
             
-                <WrapperInput id="Submit" ref ={valueRef} value ={value} onChange = {typeChange}></WrapperInput>
+            <WrapperInput id="Submit" ref ={valueRef} value ={value} onChange = {typeChange}></WrapperInput>
             
             <WrapperButton onClick ={AnswerChange} >입력</WrapperButton>
             <WrapperButton onClick ={problemChange}>다음 문제</WrapperButton>

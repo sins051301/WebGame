@@ -6,6 +6,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import WordReplay from './끝말잇기/WordReplay';
 import BaseballGame from './숫자 야구게임/BaseballGaeme';
+import NumberBaseball from './숫자 야구게임/NumberBaseball';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
